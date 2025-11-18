@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 const STORAGE_KEY_PROFILES = 'gymbuddy_profiles';
 const STORAGE_KEY_PLANS = 'gymbuddy_plans';
 const STORAGE_KEY_ACTIVE_ID = 'gymbuddy_active_user';
+const STORAGE_KEY_THEME = 'gymbuddy_theme';
 
 const App: React.FC = () => {
   // State now manages a list of profiles and a dictionary of plans
@@ -22,13 +23,23 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentView, setCurrentView] = useState<'dashboard' | 'profile'>('dashboard');
   const [isAddingNewProfile, setIsAddingNewProfile] = useState(false);
+  
+  // Initialize theme from storage or system preference
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_KEY_THEME);
+      if (saved) return saved as 'dark' | 'light';
+      if (window.matchMedia('(prefers-color-scheme: light)').matches) return 'light';
+    }
+    return 'dark'; // Default to dark to match index.html
+  });
 
   // Initial Load & Migration
   useEffect(() => {
     const savedProfiles = localStorage.getItem(STORAGE_KEY_PROFILES);
     const savedPlans = localStorage.getItem(STORAGE_KEY_PLANS);
     const savedActiveId = localStorage.getItem(STORAGE_KEY_ACTIVE_ID);
-
+    
     if (savedProfiles && savedPlans) {
       // Load modern data
       const parsedProfiles = JSON.parse(savedProfiles);
@@ -77,6 +88,21 @@ const App: React.FC = () => {
       localStorage.setItem(STORAGE_KEY_ACTIVE_ID, activeProfileId);
     }
   }, [profiles, plans, activeProfileId]);
+
+  // Theme Effect
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem(STORAGE_KEY_THEME, theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
 
   // Computed active data
   const activeProfile = profiles.find(p => p.id === activeProfileId) || null;
@@ -162,24 +188,36 @@ const App: React.FC = () => {
 
   return (
     // Abstract Colorful Mesh Gradient Background
-    <div className="min-h-screen bg-black font-sans text-slate-900 relative overflow-x-hidden selection:bg-purple-500/30">
+    <div className="min-h-screen bg-gray-50 dark:bg-black font-sans text-slate-900 dark:text-slate-100 relative overflow-x-hidden selection:bg-purple-500/30 transition-colors duration-300">
       
       {/* Fixed Background Elements */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-600/30 blur-[120px] animate-pulse-slow" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/30 blur-[120px] animate-pulse-slow delay-1000" />
-        <div className="absolute top-[40%] left-[40%] w-[30%] h-[30%] rounded-full bg-pink-600/20 blur-[100px] animate-float" />
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-400/20 dark:bg-purple-600/30 blur-[120px] animate-pulse-slow" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-400/20 dark:bg-blue-600/30 blur-[120px] animate-pulse-slow delay-1000" />
+        <div className="absolute top-[40%] left-[40%] w-[30%] h-[30%] rounded-full bg-pink-400/10 dark:bg-pink-600/20 blur-[100px] animate-float" />
       </div>
 
       {/* Content */}
       <div className="relative z-10 flex flex-col min-h-screen">
         
+        {/* Always render Header, passing activeProfile (which might be null if first user) */}
+        <Header 
+          currentProfile={activeProfile}
+          allProfiles={profiles}
+          onSwitchProfile={handleSwitchProfile}
+          onAddProfile={handleAddNewProfile}
+          onNavigate={setCurrentView}
+          currentView={currentView}
+          theme={theme}
+          onToggleTheme={toggleTheme}
+        />
+
         {/* Show Onboarding if no profiles OR if user is explicitly adding a new one */}
         {(!activeProfile || isAddingNewProfile) ? (
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col pt-20">
              {profiles.length > 0 && (
-               <div className="absolute top-4 left-4 z-50">
-                 <button onClick={() => setIsAddingNewProfile(false)} className="text-white/50 hover:text-white text-sm">
+               <div className="absolute top-24 left-4 z-50">
+                 <button onClick={() => setIsAddingNewProfile(false)} className="text-gray-600 dark:text-white/50 hover:text-black dark:hover:text-white text-sm flex items-center gap-1 bg-white/50 dark:bg-black/20 px-3 py-1 rounded-full backdrop-blur-md border border-gray-200 dark:border-white/10">
                    &larr; Cancel
                  </button>
                </div>
@@ -188,20 +226,12 @@ const App: React.FC = () => {
           </div>
         ) : (
           <>
-            <Header 
-              currentProfile={activeProfile}
-              allProfiles={profiles}
-              onSwitchProfile={handleSwitchProfile}
-              onAddProfile={handleAddNewProfile}
-              onNavigate={setCurrentView}
-              currentView={currentView}
-            />
-            
+            {/* Main Dashboard / Profile View */}
             <main className="flex-1 pt-20 pb-6 overflow-y-auto no-scrollbar">
               {isLoading ? (
                  <div className="flex flex-col items-center justify-center h-full min-h-[50vh]">
                     <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <p className="text-white/60">Updating your plan...</p>
+                    <p className="text-gray-500 dark:text-white/60">Updating your plan...</p>
                  </div>
               ) : (
                 <>
@@ -217,6 +247,8 @@ const App: React.FC = () => {
                       profile={activeProfile} 
                       onUpdateProfile={handleUpdateProfile}
                       onResetApp={handleResetApp}
+                      theme={theme}
+                      onToggleTheme={toggleTheme}
                     />
                   )}
                 </>

@@ -1,15 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#000000" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <title>GymBuddy</title>
+    <title>Gym Buddy</title>
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/2964/2964514.png">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            borderRadius: {
+              '3xl': '15px',
+              '2xl': '12px',
+              'xl': '10px',
+              'lg': '8px',
+            }
+          }
+        }
+      }
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
       body {
@@ -17,7 +32,6 @@
         margin: 0;
         padding: 0;
         overflow-x: hidden;
-        background-color: #000000;
         min-height: 100vh;
         padding-top: env(safe-area-inset-top);
         padding-bottom: env(safe-area-inset-bottom);
@@ -43,12 +57,14 @@
     "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
     "uuid": "https://aistudiocdn.com/uuid@^13.0.0",
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "canvas-confetti": "https://aistudiocdn.com/canvas-confetti@^1.9.4"
+    "canvas-confetti": "https://aistudiocdn.com/canvas-confetti@^1.9.4",
+    "react-markdown": "https://esm.sh/react-markdown@9?bundle",
+    "remark-gfm": "https://esm.sh/remark-gfm@4?bundle"
   }
 }
 </script>
 </head>
-  <body>
+  <body class="bg-gray-50 dark:bg-black transition-colors duration-300">
     <div id="root"></div>
     <script>
       if ('serviceWorker' in navigator) {
